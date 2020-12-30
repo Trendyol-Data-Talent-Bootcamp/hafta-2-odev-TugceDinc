@@ -1,14 +1,29 @@
 # Soru 3) "sample.pageview": tablosunda 1 gün içerisinde trendyol.com a gelen tüm ziyaretlerin logu var.
 
 ```SQL
+WITH
+  NOfUserByTime AS (
+  SELECT
+    TIMESTAMP_TRUNC(view_ts,minute) AS dttime,
+    COUNT(DISTINCT deviceid) AS cnt
+  FROM
+    tugce_dinc.pageview pv
+  GROUP BY
+    dttime
+  ORDER BY
+    dttime )
 SELECT
-    TIMESTAMP(date(pv.view_ts) || ' '|| EXTRACT(hour FROM view_ts) ||':'|| EXTRACT(minute FROM view_ts)||':'||'00') as dttime,
-    COUNT(pv.deviceid) AS cnt
-FROM tugce_dinc.pageview pv
-WHERE pv.view_ts
-BETWEEN
-    TIMESTAMP_ADD(TIMESTAMP(date(pv.view_ts) || ' '|| EXTRACT(hour FROM view_ts) ||':'|| EXTRACT(minute FROM view_ts)||':'||'00'), INTERVAL -5 MINUTE)  and
-    TIMESTAMP(date(pv.view_ts) ||' '|| EXTRACT(hour FROM view_ts) ||':'|| EXTRACT(minute FROM view_ts)||':'||'00')
-GROUP BY dttime
-ORDER BY dttime
+  at1.dttime,
+  SUM(at2.cnt) as NumberOfUser
+FROM
+  NOfUserByTime at1
+INNER JOIN
+  NOfUserByTime at2
+ON
+  at2.dttime BETWEEN TIMESTAMP_ADD(at1.dttime, INTERVAL -4 MINUTE)
+  AND at1.dttime
+GROUP BY
+  at1.dttime
+ORDER BY
+  at1.dttime
 ```
